@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>رفع طلب - الدعم الفني الذاتي</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <img src="assets/logo.jpg" alt="شعار أمانة منطقة حائل" class="logo" />
+    <h1>رفع طلب</h1>
+  </header>
+
+  <nav class="nav">
+   
+    <a href="request.html" class="active">رفع طلب</a>
+    <a href="track.html">متابعة الطلبات</a>
+    <a href="profile.html">الملف الشخصي</a>
+    <a href="contact.html">تواصل</a>
+    <a href="faq.html">الأسئلة الشائعة</a>
+  </nav>
+
+  <main class="container">
+    <section class="card">
+      <h2>نموذج الطلب</h2>
+      <div class="form-row"><label>عنوان الطلب</label><input id="reqTitle" type="text" placeholder="مثال: مشكلة في النظام" /></div>
+      <div class="form-row"><label>وصف المشكلة</label><textarea id="reqDesc" rows="5" placeholder="اكتب تفاصيل المشكلة..."></textarea></div>
+      <div class="form-row"><label>مرفق (اختياري)</label><input id="reqFile" type="file" /></div>
+
+      <!-- حقل الموقع (اختياري) -->
+      <div class="form-row">
+        <label for="reqLocation">الموقع (اختياري)</label>
+        <input id="reqLocation" type="text" placeholder="موقعك (اختياري)" />
+      </div>
+
+      <button type="button" onclick="submitRequest()">إرسال الطلب</button>
+      <div class="muted">بعد الإرسال، يمكنك متابعة حالته من صفحة <a href="track.html">متابعة الطلبات</a>.</div>
+      <div class="actions-row"><button onclick="toggleDarkMode()">🌓 تبديل الوضع</button></div>
+
+      <!-- عرض رقم الطلب بعد رفعه -->
+      <div id="orderNumberContainer" style="display:none;margin-top: 10px;">
+        <p>رقم الطلب: <span id="orderNumber"></span></p>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>© أمانة منطقة حائل</p></footer>
+
+  <script>
+    // دالة لإرسال الطلب
+    function submitRequest() {
+      const requestTitle = document.getElementById("reqTitle").value.trim();
+      const requestDescription = document.getElementById("reqDesc").value.trim();
+      const requestFile = document.getElementById("reqFile").files[0];
+      const requestLocation = document.getElementById("reqLocation").value.trim();
+
+      // التحقق من الحقول
+      if (!requestTitle || !requestDescription) {
+        alert("يرجى ملء جميع الحقول");
+        return;
+      }
+
+      // توليد رقم الطلب بشكل عشوائي (مثال: طلب رقم 123456)
+      const requestNumber = Math.floor(Math.random() * 1000000);  // توليد رقم عشوائي من 6 أرقام
+
+      // استرجاع الطلبات السابقة من localStorage
+      let requests = JSON.parse(localStorage.getItem("requests")) || [];
+
+      // إضافة الطلب الجديد إلى المصفوفة
+      const newRequest = {
+        requestNumber: requestNumber,
+        requestTitle: requestTitle,
+        requestDescription: requestDescription,
+        requestLocation: requestLocation,
+      };
+      requests.push(newRequest);
+
+      // تخزين الطلبات في localStorage
+      localStorage.setItem("requests", JSON.stringify(requests));
+
+      // عرض رقم الطلب
+      document.getElementById("orderNumberContainer").style.display = "block";
+      document.getElementById("orderNumber").innerText = requestNumber;
+
+      // مسح البيانات من الحقول بعد رفع الطلب
+      document.getElementById("reqTitle").value = "";
+      document.getElementById("reqDesc").value = "";
+      document.getElementById("reqFile").value = "";
+      document.getElementById("reqLocation").value = "";
+    }
+  </script>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

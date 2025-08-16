@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>تواصل معنا - محادثة الدعم الذاتي</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* واجهة محادثة */
+    .chat-wrap { max-width: 980px; margin: 20px auto; padding: 0 12px; }
+    .chat-card { background:#ffffffdb; border:1px solid #dfe7e2; border-radius:12px; padding:0; overflow:hidden; box-shadow:0 3px 10px rgba(0,0,0,.05) }
+    .chat-header { padding:14px; background:#e9f5ef; color:#0a6a3b; font-weight:800; display:flex; align-items:center; gap:10px }
+    .chat-body { padding:16px; max-height:60vh; overflow:auto; background:rgba(255,255,255,.85) }
+    .msg { margin:8px 0; display:flex; }
+    .msg.bot { justify-content:flex-start; }
+    .msg.me { justify-content:flex-end; }
+    .bubble { max-width:80%; padding:10px 12px; border-radius:12px; line-height:1.6 }
+    .bot .bubble { background:#f2f7f4; border:1px solid #dfe7e2; color:#254335 }
+    .me  .bubble { background:#0a6a3b; color:#fff }
+    .chat-footer { padding:12px; background:#fff; border-top:1px solid #eef2ef; display:flex; gap:8px; align-items:center }
+    .chat-footer input { flex:1; padding:10px; border:1px solid #c8d8cf; border-radius:8px; }
+    .quick { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
+    .quick .btn { background:#ffffff; color:#0a6a3b; border:1px solid #cfe2d8; }
+    .quick .btn:hover { background:#e9f5ef }
+    /* وضع ليلي */
+    body.dark-mode .chat-card{ background:#1c1c1c; border-color:#333 }
+    body.dark-mode .chat-header{ background:#2b2b2b; color:#fff }
+    body.dark-mode .chat-body{ background:#1f1f1f }
+    body.dark-mode .bot .bubble{ background:#27302c; border-color:#333; color:#dfe7e2 }
+    body.dark-mode .me .bubble{ background:#0a6a3b; color:#fff }
+    body.dark-mode .chat-footer{ background:#1c1c1c; border-color:#333 }
+    body.dark-mode .quick .btn{ background:#2b2b2b; color:#a7e3c6; border-color:#333 }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="assets/logo.jpg" alt="شعار أمانة منطقة حائل" class="logo" />
+    <h1>تواصل معنا - محادثة الدعم الذاتي</h1>
+  </header>
+
+  <nav class="nav">
+    
+    <a href="request.html">رفع طلب</a>
+    <a href="track.html">متابعة الطلبات</a>
+    <a href="profile.html">الملف الشخصي</a>
+    <a href="contact.html" class="active">تواصل معنا (محادثة)</a>
+    <a href="faq.html">الأسئلة الشائعة</a>
+  </nav>
+
+  <main class="chat-wrap">
+    <section class="chat-card">
+      <div class="chat-header">🤖 مساعد التواصل</div>
+
+      <div id="chatBody" class="chat-body"></div>
+      <div class="quick" id="quickArea"></div>
+
+      <div class="chat-footer">
+        <input id="chatInput" type="text" placeholder="اكتب رسالتك..." />
+        <button class="btn" id="sendBtn">إرسال</button>
+        <button class="btn" onclick="toggleDarkMode()">🌓</button>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>© أمانة منطقة حائل</p></footer>
+
+  <script src="app.js" defer></script>
+  <script>
+    // —— منطق المحادثة البسيط مع أزرار سريعة —— //
+    const chatBody  = document.getElementById('chatBody');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn   = document.getElementById('sendBtn');
+    const quickArea = document.getElementById('quickArea');
+
+    const QUICK_HOME = [
+      {text:'رفع طلب جديد', intent:'raise'},
+      {text:'متابعة طلباتي', intent:'track'},
+      {text:'الأسئلة الشائعة', intent:'faq'},
+      {text:'بيانات التواصل المباشر', intent:'info'}
+    ];
+
+    function addMsg(text, who='bot'){
+      const row = document.createElement('div');
+      row.className = 'msg ' + (who==='me'?'me':'bot');
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.textContent = text;
+      row.appendChild(b);
+      chatBody.appendChild(row);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      const log = JSON.parse(localStorage.getItem('chatLog_contact')||'[]');
+      log.push({who, text, ts:Date.now()});
+      localStorage.setItem('chatLog_contact', JSON.stringify(log));
+    }
+
+    function setQuick(options){
+      quickArea.innerHTML = '';
+      options.forEach(opt=>{
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = opt.text;
+        btn.addEventListener('click', ()=> handleIntent(opt.intent));
+        quickArea.appendChild(btn);
+      });
+    }
+
+    function handleIntent(intent){
+      chatInput.value = '';
+      if(intent==='raise'){
+        const logged = !!localStorage.getItem('loggedIn');
+        if(!logged){
+          addMsg('لرفع طلب جديد، الرجاء تسجيل الدخول أولاً.');
+          setQuick([{text:'الذهاب لتسجيل الدخول', intent:'go_login'},{text:'رجوع', intent:'home'}]);
+        }else{
+          addMsg('يفتح الآن صفحة رفع الطلب…');
+          window.location.href = 'request.html';
+        }
+      }else if(intent==='track'){
+        addMsg('سأفتح صفحة متابعة الطلبات.');
+        window.location.href = 'track.html';
+      }else if(intent==='faq'){
+        addMsg('تفضّل صفحة الأسئلة الشائعة.');
+        window.location.href = 'faq.html';
+      }else if(intent==='go_login'){
+        window.location.href = 'index.html';
+      }else if(intent==='info'){
+        // بيانات تواصل مباشرة (نص ثابت، عدّلها لو عندك معلومات رسمية)
+        addMsg('بيانات التواصل المباشر:\n• الهاتف: 199040\n• البريد: support@hail.gov.sa\n• أوقات العمل: 8ص–2م (الأحد–الخميس)');
+        setQuick([{text:'رفع طلب جديد', intent:'raise'},{text:'متابعة طلباتي', intent:'track'},{text:'رجوع', intent:'home'}]);
+      }else if(intent==='home'){
+        addMsg('اختر من الخيارات:', 'bot');
+        setQuick(QUICK_HOME);
+      }else{
+        addMsg('لم أفهم. اختر من: رفع طلب جديد، متابعة طلباتي، الأسئلة الشائعة، أو بيانات التواصل المباشر.');
+        setQuick(QUICK_HOME);
+      }
+    }
+
+    function botNlp(userText){
+      const t = (userText||'').trim();
+      if(!t) return handleIntent('home');
+      const low = t.toLowerCase();
+      if(low.includes('رفع') || low.includes('طلب') || low.includes('new')) return handleIntent('raise');
+      if(low.includes('متاب') || low.includes('track')) return handleIntent('track');
+      if(low.includes('faq') || low.includes('سؤال') || low.includes('الشائعة')) return handleIntent('faq');
+      if(low.includes('هاتف') || low.includes('بريد') || low.includes('تواصل') || low.includes('contact') || low.includes('info')) return handleIntent('info');
+      handleIntent('home');
+    }
+
+    sendBtn.addEventListener('click', ()=>{
+      const txt = chatInput.value.trim();
+      if(!txt) return;
+      addMsg(txt, 'me');
+      botNlp(txt);
+    });
+    chatInput.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ e.preventDefault(); sendBtn.click(); }
+    });
+
+    (function boot(){
+      const old = JSON.parse(localStorage.getItem('chatLog_contact')||'[]');
+      if(old.length){
+        old.forEach(m=> addMsg(m.text, m.who));
+      }else{
+        addMsg('مرحباً بك! كيف نقدر نساعدك اليوم؟ اختر من الخيارات بالأسفل:');
+      }
+      setQuick(QUICK_HOME);
+    })();
+  </script>
+</body>
+</html>

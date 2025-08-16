@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>الدعم الفني الذاتي لأمانة منطقة حائل</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <img src="assets/logo.jpg" alt="شعار أمانة منطقة حائل" class="logo" />
+    <h1>الدعم الفني الذاتي لأمانة منطقة حائل</h1>
+  </header>
+
+  <main class="container">
+    <section class="card" style="max-width:520px;margin-inline:auto">
+      <div class="actions-row" style="justify-content:center">
+        <button type="button" id="tab-login" class="btn">تسجيل الدخول</button>
+        <button type="button" id="tab-register" class="btn">مستخدم جديد</button>
+      </div>
+
+      <!-- تسجيل الدخول -->
+      <form id="loginForm" style="margin-top:10px">
+        <div class="form-row">
+          <label for="loginId">رقم الهوية</label>
+          <input id="loginId" type="text" required />
+        </div>
+        <div class="form-row">
+          <label for="loginPass">الرمز</label>
+          <input id="loginPass" type="password" required />
+        </div>
+        <button type="submit">دخول</button>
+
+        <!-- نسيان كلمة المرور -->
+        <div class="forgot-wrap" style="text-align:center;margin-top:10px">
+          <a href="#" id="forgotLink">نسيت كلمة المرور؟</a>
+        </div>
+        <div id="forgotBox" style="display:none;margin-top:10px;background:#ffffffcc;padding:10px;border-radius:8px">
+          <label for="forgotInput">أدخل رقم الهوية أو البريد الإلكتروني</label>
+          <input id="forgotInput" type="text" placeholder="مثال: 1xxxxxxxxx أو name@email.com">
+          <button type="button" style="margin-top:8px" onclick="handleForgot()">إرسال رابط/رمز الاستعادة</button>
+        </div>
+      </form>
+
+      <!-- تسجيل جديد -->
+      <form id="registerForm" style="display:none;margin-top:10px">
+        <div class="form-row"><label>الاسم الثلاثي</label><input id="fullName" type="text" required /></div>
+        <div class="form-row"><label>تاريخ الميلاد</label><input id="birthDate" type="date" required /></div>
+        <div class="form-row"><label>رقم الهوية</label><input id="idNumber" type="text" maxlength="10" required /></div>
+        <div class="form-row"><label>رقم التواصل</label><input id="phone" type="tel" required /></div>
+        <div class="form-row"><label>البريد الإلكتروني</label><input id="email" type="email" required /></div>
+        <div class="form-row"><label>الرمز</label><input id="password" type="password" required /></div>
+        <div class="form-row"><label>تأكيد الرمز</label><input id="confirmPassword" type="password" required /></div>
+        <div class="form-row"><label>صورة شخصية (اختياري)</label><input id="profilePic" type="file" accept="image/*" /></div>
+        <button type="submit">تسجيل</button>
+      </form>
+
+      <div class="actions-row" style="justify-content:center;margin-top:12px">
+        <button type="button" onclick="toggleDarkMode()">🌓 تبديل الوضع</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // التبديل بين تبويبات تسجيل الدخول والتسجيل الجديد
+    document.getElementById("tab-login").addEventListener("click", function() {
+      document.getElementById("loginForm").style.display = "block";
+      document.getElementById("registerForm").style.display = "none";
+    });
+
+    document.getElementById("tab-register").addEventListener("click", function() {
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("registerForm").style.display = "block";
+    });
+
+    // نسيان كلمة المرور
+    document.getElementById("forgotLink").addEventListener("click", function(e) {
+      e.preventDefault();
+      const box = document.getElementById("forgotBox");
+      box.style.display = (box.style.display === "none") ? "block" : "none";
+    });
+
+    function handleForgot(){
+      const input = document.getElementById("forgotInput").value.trim();
+      if (!input) { alert("أدخل رقم الهوية أو البريد الإلكتروني"); return; }
+      alert("تم إرسال تعليمات استعادة كلمة المرور (تجريبي)");
+    }
+
+    // تسجيل دخول
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const id = document.getElementById("loginId").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (user && user.idNumber === id && user.password === pass) {
+        localStorage.setItem("loggedIn", "true");
+        window.location.href = "main.html";  // التأكد من التوجيه الصحيح
+      } else {
+        alert("بيانات الدخول غير صحيحة");
+      }
+    });
+
+    // تسجيل مستخدم جديد
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const fullName = document.getElementById("fullName").value.trim();
+        const birthDate = document.getElementById("birthDate").value.trim();
+        const idNumber = document.getElementById("idNumber").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+        if (password !== confirmPassword) {
+          alert("كلمة المرور وتأكيدها غير متطابقين");
+          return;
+        }
+
+        const user = { fullName, birthDate, idNumber, phone, email, password };
+
+        localStorage.setItem("user", JSON.stringify(user));
+        alert("✅ تم إنشاء حسابك بنجاح، يمكنك الآن تسجيل الدخول");
+
+        // إخفاء النموذج الحالي بعد التسجيل
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "none";
+
+        // التبديل إلى نموذج تسجيل الدخول بعد التسجيل بنجاح
+        document.getElementById("tab-login").click();
+    });
+
+    // الوضع الليلي
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+      localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>الملف الشخصي - الدعم الفني الذاتي</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // طبّق الثيم قبل الرسم لمنع الوميض
+    (function(){try{ if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('theme-dark');}}catch(e){}})();
+  </script>
+</head>
+<body>
+  <header>
+    <img src="assets/logo.jpg" alt="شعار أمانة منطقة حائل" class="logo" />
+    <h1>الملف الشخصي</h1>
+  </header>
+
+  <nav class="nav">
+    
+    <a href="request.html">رفع طلب</a>
+    <a href="track.html">متابعة الطلبات</a>
+    <a href="profile.html" class="active">الملف الشخصي</a>
+    <a href="contact.html">تواصل</a>
+    <a href="faq.html">الأسئلة الشائعة</a>
+  </nav>
+
+  <main class="container">
+    <section class="card">
+      <h2>بياناتي</h2>
+
+      <!-- حقول ثابتة (غير قابلة للتعديل) -->
+      <div class="form-row">
+        <label for="fullName">الاسم الثلاثي</label>
+        <input id="fullName" type="text" readonly class="locked" />
+      </div>
+      <div class="form-row">
+        <label for="idNumber">رقم الهوية</label>
+        <input id="idNumber" type="text" readonly class="locked" />
+      </div>
+      <div class="form-row">
+        <label for="birthDate">تاريخ الميلاد</label>
+        <input id="birthDate" type="date" readonly class="locked" />
+      </div>
+
+      <!-- حقول قابلة للتعديل -->
+      <div class="form-row">
+        <label for="phone">رقم التواصل</label>
+        <input id="phone" type="tel" />
+      </div>
+      <div class="form-row">
+        <label for="email">البريد الإلكتروني</label>
+        <input id="email" type="email" />
+      </div>
+
+      <button type="button" onclick="saveProfile()">حفظ</button>
+
+      <div class="actions-row">
+        <button type="button" onclick="toggleDarkMode()">🌓 تبديل الوضع</button>
+        <button type="button" class="danger" onclick="logout()">تسجيل الخروج</button>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>© أمانة منطقة حائل</p></footer>
+
+  <script src="app.js" defer></script>
+  <script>
+    // تحميل البيانات وإغلاق الحقول الثابتة
+    document.addEventListener('DOMContentLoaded', function(){
+      loadProfile(); // موجودة في app.js
+      // تأكيد منع التحرير (لو حدا حاول يزيل readonly عبر DevTools)
+      ['fullName','idNumber','birthDate'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el){
+          el.addEventListener('keydown', e=> e.preventDefault());
+          el.addEventListener('input',  e=> { e.target.value = (JSON.parse(localStorage.getItem('user')||'{}')[id]||''); });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>تسجيل جديد - الدعم الفني الذاتي</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <img src="assets/logo.jpg" alt="شعار أمانة منطقة حائل" class="logo" />
+    <h1>تسجيل مستخدم جديد</h1>
+  </header>
+
+  <nav class="nav">
+    
+    <a href="request.html">رفع طلب</a>
+    <a href="track.html">متابعة الطلبات</a>
+    <a href="profile.html">الملف الشخصي</a>
+    <a href="contact.html">تواصل</a>
+    <a href="faq.html">الأسئلة الشائعة</a>
+  </nav>
+
+  <main class="container">
+    <section class="card">
+      <h2>بيانات المستخدم</h2>
+      <div class="form-row"><label>الاسم الثلاثي</label><input id="fullName" type="text" /></div>
+      <div class="form-row"><label>تاريخ الميلاد</label><input id="birthDate" type="date" /></div>
+      <div class="form-row"><label>رقم الهوية</label><input id="idNumber" type="text" maxlength="10" /></div>
+      <div class="form-row"><label>رقم التواصل</label><input id="phone" type="tel" /></div>
+      <div class="form-row"><label>البريد الإلكتروني</label><input id="email" type="email" /></div>
+      <div class="form-row"><label>كلمة المرور</label><input id="password" type="password" /></div>
+      <div class="form-row"><label>تأكيد كلمة المرور</label><input id="confirmPassword" type="password" /></div>
+      <div class="form-row"><label>صورة شخصية (اختياري)</label><input id="profilePic" type="file" accept="image/*" /></div>
+      <button onclick="registerUser()">تسجيل</button>
+      <div class="actions-row">
+        <button type="button" onclick="toggleDarkMode()">🌓 تبديل الوضع</button>
+        <a class="btn-link" href="index.html">لدي حساب؟ تسجيل الدخول</a>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>© أمانة منطقة حائل</p></footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
