@@ -14,13 +14,13 @@
     .msg { margin:8px 0; display:flex; }
     .msg.bot { justify-content:flex-start; }
     .msg.me { justify-content:flex-end; }
-    .bubble { max-width:80%; padding:10px 12px; border-radius:12px; line-height:1.6 }
+    .bubble { max-width:80%; padding:10px 12px; border-radius:12px; line-height:1.6; white-space:pre-wrap }
     .bot .bubble { background:#f2f7f4; border:1px solid #dfe7e2; color:#254335 }
     .me  .bubble { background:#0a6a3b; color:#fff }
     .chat-footer { padding:12px; background:#fff; border-top:1px solid #eef2ef; display:flex; gap:8px; align-items:center }
     .chat-footer input { flex:1; padding:10px; border:1px solid #c8d8cf; border-radius:8px; }
-    .quick { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
-    .quick .btn { background:#ffffff; color:#0a6a3b; border:1px solid #cfe2d8; }
+    .quick { display:flex; gap:8px; flex-wrap:wrap; margin:8px 16px 16px }
+    .quick .btn { background:#ffffff; color:#0a6a3b; border:1px solid #cfe2d8; padding:8px 10px; border-radius:8px; cursor:pointer; }
     .quick .btn:hover { background:#e9f5ef }
     /* وضع ليلي */
     body.dark-mode .chat-card{ background:#1c1c1c; border-color:#333 }
@@ -39,7 +39,6 @@
   </header>
 
   <nav class="nav">
-    
     <a href="request.html">رفع طلب</a>
     <a href="track.html">متابعة الطلبات</a>
     <a href="profile.html">الملف الشخصي</a>
@@ -57,114 +56,322 @@
       <div class="chat-footer">
         <input id="chatInput" type="text" placeholder="اكتب رسالتك..." />
         <button class="btn" id="sendBtn">إرسال</button>
-        <button class="btn" onclick="toggleDarkMode()">🌓</button>
+        <button class="btn" id="darkBtn">🌓</button>
       </div>
     </section>
   </main>
 
   <footer><p>© أمانة منطقة حائل</p></footer>
 
+  <!-- تأكد أن app.js موجود في نفس المجلد ويحتوي toggleDarkMode وحماية الصفحات -->
   <script src="app.js" defer></script>
   <script>
-    // —— منطق المحادثة البسيط مع أزرار سريعة —— //
-    const chatBody  = document.getElementById('chatBody');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn   = document.getElementById('sendBtn');
-    const quickArea = document.getElementById('quickArea');
+    (function(){
+      "use strict";
 
-    const QUICK_HOME = [
-      {text:'رفع طلب جديد', intent:'raise'},
-      {text:'متابعة طلباتي', intent:'track'},
-      {text:'الأسئلة الشائعة', intent:'faq'},
-      {text:'بيانات التواصل المباشر', intent:'info'}
-    ];
+      var chatBody  = document.getElementById('chatBody');
+      var chatInput = document.getElementById('chatInput');
+      var sendBtn   = document.getElementById('sendBtn');
+      var quickArea = document.getElementById('quickArea');
+      var darkBtn   = document.getElementById('darkBtn');
 
-    function addMsg(text, who='bot'){
-      const row = document.createElement('div');
-      row.className = 'msg ' + (who==='me'?'me':'bot');
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      b.textContent = text;
-      row.appendChild(b);
-      chatBody.appendChild(row);
-      chatBody.scrollTop = chatBody.scrollHeight;
-      const log = JSON.parse(localStorage.getItem('chatLog_contact')||'[]');
-      log.push({who, text, ts:Date.now()});
-      localStorage.setItem('chatLog_contact', JSON.stringify(log));
-    }
-
-    function setQuick(options){
-      quickArea.innerHTML = '';
-      options.forEach(opt=>{
-        const btn = document.createElement('button');
-        btn.className = 'btn';
-        btn.textContent = opt.text;
-        btn.addEventListener('click', ()=> handleIntent(opt.intent));
-        quickArea.appendChild(btn);
-      });
-    }
-
-    function handleIntent(intent){
-      chatInput.value = '';
-      if(intent==='raise'){
-        const logged = !!localStorage.getItem('loggedIn');
-        if(!logged){
-          addMsg('لرفع طلب جديد، الرجاء تسجيل الدخول أولاً.');
-          setQuick([{text:'الذهاب لتسجيل الدخول', intent:'go_login'},{text:'رجوع', intent:'home'}]);
-        }else{
-          addMsg('يفتح الآن صفحة رفع الطلب…');
-          window.location.href = 'request.html';
+      // حالة محادثة مجمّعة
+      var state = {
+        step: "idle",          // idle, needNumber, needType, needPlace, needDesc, needDays, done
+        ticket: {
+          requestNumber: "",
+          type: "",     // شكوى / اقتراح
+          place: "",
+          desc: "",
+          daysSince: null
         }
-      }else if(intent==='track'){
-        addMsg('سأفتح صفحة متابعة الطلبات.');
-        window.location.href = 'track.html';
-      }else if(intent==='faq'){
-        addMsg('تفضّل صفحة الأسئلة الشائعة.');
-        window.location.href = 'faq.html';
-      }else if(intent==='go_login'){
-        window.location.href = 'index.html';
-      }else if(intent==='info'){
-        // بيانات تواصل مباشرة (نص ثابت، عدّلها لو عندك معلومات رسمية)
-        addMsg('بيانات التواصل المباشر:\n• الهاتف: 199040\n• البريد: support@hail.gov.sa\n• أوقات العمل: 8ص–2م (الأحد–الخميس)');
-        setQuick([{text:'رفع طلب جديد', intent:'raise'},{text:'متابعة طلباتي', intent:'track'},{text:'رجوع', intent:'home'}]);
-      }else if(intent==='home'){
-        addMsg('اختر من الخيارات:', 'bot');
-        setQuick(QUICK_HOME);
-      }else{
-        addMsg('لم أفهم. اختر من: رفع طلب جديد، متابعة طلباتي، الأسئلة الشائعة، أو بيانات التواصل المباشر.');
+      };
+
+      var QUICK_HOME = [
+        {text:'بدء متابعة طلب', intent:'start_follow'},
+        {text:'رفع طلب جديد', intent:'raise'},
+        {text:'متابعة طلباتي', intent:'track'},
+        {text:'الأسئلة الشائعة', intent:'faq'},
+        {text:'بيانات التواصل', intent:'info'}
+      ];
+
+      function addMsg(text, who){
+        var row = document.createElement('div');
+        row.className = 'msg ' + (who === 'me' ? 'me' : 'bot');
+        var b = document.createElement('div');
+        b.className = 'bubble';
+        b.textContent = text;
+        row.appendChild(b);
+        chatBody.appendChild(row);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        // سجل المحادثة
+        var log = [];
+        try { log = JSON.parse(localStorage.getItem('chatLog_contact') || '[]'); } catch(_){}
+        log.push({who: who || 'bot', text: text, ts: Date.now()});
+        localStorage.setItem('chatLog_contact', JSON.stringify(log));
+      }
+
+      function setQuick(options){
+        quickArea.innerHTML = '';
+        options.forEach(function(opt){
+          var btn = document.createElement('button');
+          btn.className = 'btn';
+          btn.textContent = opt.text;
+          btn.addEventListener('click', function(){ handleIntent(opt.intent); });
+          quickArea.appendChild(btn);
+        });
+      }
+
+      function resetFlow(){
+        state.step = "idle";
+        state.ticket = { requestNumber:"", type:"", place:"", desc:"", daysSince:null };
+      }
+
+      function handleIntent(intent){
+        if (intent === 'raise') {
+          addMsg('سيتم فتح صفحة رفع الطلب…', 'bot');
+          window.location.href = 'request.html';
+          return;
+        }
+        if (intent === 'track') {
+          addMsg('سيتم فتح صفحة متابعة الطلبات…', 'bot');
+          window.location.href = 'track.html';
+          return;
+        }
+        if (intent === 'faq') {
+          addMsg('سيتم فتح صفحة الأسئلة الشائعة…', 'bot');
+          window.location.href = 'faq.html';
+          return;
+        }
+        if (intent === 'info') {
+          addMsg('بيانات التواصل:\n• الهاتف: 199040\n• البريد: support@hail.gov.sa\n• أوقات العمل: 8ص–2م (الأحد–الخميس)', 'bot');
+          setQuick(QUICK_HOME);
+          return;
+        }
+        if (intent === 'cancel') {
+          addMsg('تم إلغاء العملية. ماذا تود أن تفعل؟', 'bot');
+          resetFlow();
+          setQuick(QUICK_HOME);
+          return;
+        }
+        if (intent === 'start_follow') {
+          resetFlow();
+          state.step = "needNumber";
+          addMsg('فضلاً أدخل رقم الطلب (6 أرقام).', 'bot');
+          setQuick([{text:'إلغاء', intent:'cancel'}]);
+          return;
+        }
+
+        // غير معروف
+        addMsg('اختر من: بدء متابعة طلب / رفع طلب جديد / متابعة طلباتي / الأسئلة الشائعة / بيانات التواصل.', 'bot');
         setQuick(QUICK_HOME);
       }
-    }
 
-    function botNlp(userText){
-      const t = (userText||'').trim();
-      if(!t) return handleIntent('home');
-      const low = t.toLowerCase();
-      if(low.includes('رفع') || low.includes('طلب') || low.includes('new')) return handleIntent('raise');
-      if(low.includes('متاب') || low.includes('track')) return handleIntent('track');
-      if(low.includes('faq') || low.includes('سؤال') || low.includes('الشائعة')) return handleIntent('faq');
-      if(low.includes('هاتف') || low.includes('بريد') || low.includes('تواصل') || low.includes('contact') || low.includes('info')) return handleIntent('info');
-      handleIntent('home');
-    }
-
-    sendBtn.addEventListener('click', ()=>{
-      const txt = chatInput.value.trim();
-      if(!txt) return;
-      addMsg(txt, 'me');
-      botNlp(txt);
-    });
-    chatInput.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter'){ e.preventDefault(); sendBtn.click(); }
-    });
-
-    (function boot(){
-      const old = JSON.parse(localStorage.getItem('chatLog_contact')||'[]');
-      if(old.length){
-        old.forEach(m=> addMsg(m.text, m.who));
-      }else{
-        addMsg('مرحباً بك! كيف نقدر نساعدك اليوم؟ اختر من الخيارات بالأسفل:');
+      function parseDaysFromCreatedAt(createdAt){
+        try{
+          var created = new Date(createdAt);
+          var now = new Date();
+          var diffMs = now - created;
+          var days = Math.floor(diffMs / (1000*60*60*24));
+          if (days < 0 || isNaN(days)) return null;
+          return days;
+        }catch(_){ return null; }
       }
-      setQuick(QUICK_HOME);
+
+      function checkRequestAgeByNumber(reqNo){
+        var list = [];
+        try { list = JSON.parse(localStorage.getItem('requests') || '[]'); } catch(_){}
+        var found = list.find(function(r){ return r.requestNumber === reqNo; });
+        if (!found) return null;
+        var d = parseDaysFromCreatedAt(found.createdAt);
+        return (d == null ? null : {days:d, req:found});
+      }
+
+      function finalizeTicket(){
+        // حفظ التذكرة المجمّعة
+        var store = [];
+        try { store = JSON.parse(localStorage.getItem('contactTickets') || '[]'); } catch(_){}
+        store.push({
+          ...state.ticket,
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('contactTickets', JSON.stringify(store));
+
+        // منطق الرد على حسب الأيام
+        var d = state.ticket.daysSince;
+        if (typeof d === 'number' && d >= 7) {
+          addMsg('بما أن الطلب له 7 أيام أو أكثر، سيتم تواصل الدعم الفني معك خلال دقائق. شكرًا لصبرك.', 'bot');
+        } else {
+          addMsg('مدة الرد على الطلبات حتى ٧ أيام كحد أقصى. يرجى الانتظار حتى اكتمال المدة، وسنوافيك بالتحديثات.', 'bot');
+        }
+
+        setQuick(QUICK_HOME);
+        state.step = "done";
+      }
+
+      function handleUserText(text){
+        var t = (text || '').trim();
+        if (!t) return;
+
+        // خطوات جمع البيانات
+        if (state.step === "needNumber") {
+          // حفظ رقم الطلب
+          state.ticket.requestNumber = t;
+          var auto = checkRequestAgeByNumber(t);
+          if (auto && typeof auto.days === 'number') {
+            state.ticket.daysSince = auto.days;
+            // مباشرة ننتقل إلى نوع الطلب
+            state.step = "needType";
+            addMsg('ما نوع الطلب؟ (اكتب: شكوى أو اقتراح)', 'bot');
+            setQuick([{text:'شكوى', intent:'type_complaint'}, {text:'اقتراح', intent:'type_suggestion'}, {text:'إلغاء', intent:'cancel'}]);
+          } else {
+            // ما عرفناه من المتابعة؛ سنسألك عن أيام الرفع لاحقاً
+            state.step = "needType";
+            addMsg('ما نوع الطلب؟ (اكتب: شكوى أو اقتراح)', 'bot');
+            setQuick([{text:'شكوى', intent:'type_complaint'}, {text:'اقتراح', intent:'type_suggestion'}, {text:'إلغاء', intent:'cancel'}]);
+          }
+          return;
+        }
+
+        if (state.step === "needType") {
+          var low = t.toLowerCase();
+          if (low.indexOf('شك') !== -1) { state.ticket.type = 'شكوى'; }
+          else if (low.indexOf('اقت') !== -1 || low.indexOf('اقتراح') !== -1) { state.ticket.type = 'اقتراح'; }
+          else { addMsg('فضلاً اكتب "شكوى" أو "اقتراح".', 'bot'); return; }
+
+          state.step = "needPlace";
+          addMsg('اذكر المكان المرتبط بالمشكلة (حي/شارع/مرفق).', 'bot');
+          setQuick([{text:'إلغاء', intent:'cancel'}]);
+          return;
+        }
+
+        if (state.step === "needPlace") {
+          state.ticket.place = t;
+          state.step = "needDesc";
+          addMsg('اكتب وصف المشكلة بالتفصيل.', 'bot');
+          setQuick([{text:'إلغاء', intent:'cancel'}]);
+          return;
+        }
+
+        if (state.step === "needDesc") {
+          state.ticket.desc = t;
+
+          // لو ما عرفنا الأيام من رقم الطلب، اسأل الآن
+          if (typeof state.ticket.daysSince === 'number') {
+            // لدينا الأيام بالفعل
+            finalizeTicket();
+          } else {
+            state.step = "needDays";
+            addMsg('منذ كم يوم رُفع الطلب؟ (اكتب رقم الأيام فقط)', 'bot');
+            setQuick([{text:'إلغاء', intent:'cancel'}]);
+          }
+          return;
+        }
+
+        if (state.step === "needDays") {
+          var n = parseInt(t, 10);
+          if (isNaN(n) || n < 0) {
+            addMsg('أدخل رقم أيام صالح (مثلاً: 3 أو 10).', 'bot');
+            return;
+          }
+          state.ticket.daysSince = n;
+          finalizeTicket();
+          return;
+        }
+
+        // لو كنا خارج التدفق
+        // فهم بسيط للكلمات
+        var lowt = t.toLowerCase();
+        if (lowt.indexOf('متابع') !== -1 || lowt.indexOf('رقم') !== -1) {
+          handleIntent('start_follow'); return;
+        }
+        if (lowt.indexOf('رفع') !== -1 || lowt.indexOf('جديد') !== -1) {
+          handleIntent('raise'); return;
+        }
+        if (lowt.indexOf('سؤال') !== -1 || lowt.indexOf('faq') !== -1) {
+          handleIntent('faq'); return;
+        }
+        if (lowt.indexOf('تواصل') !== -1 || lowt.indexOf('info') !== -1) {
+          handleIntent('info'); return;
+        }
+
+        // الافتراضي
+        addMsg('لفتح متابعة الطلب اكتب: متابعة أو اضغط "بدء متابعة طلب".', 'bot');
+        setQuick(QUICK_HOME);
+      }
+
+      // نوايا زرّية إضافية
+      function handleQuickExtra(intent){
+        if (intent === 'type_complaint') {
+          handleUserText('شكوى');
+          return;
+        }
+        if (intent === 'type_suggestion') {
+          handleUserText('اقتراح');
+          return;
+        }
+      }
+
+      // Event handlers
+      sendBtn.addEventListener('click', function(){
+        var txt = chatInput.value.trim();
+        if (!txt) return;
+        addMsg(txt, 'me');
+        handleUserText(txt);
+        chatInput.value = '';
+      });
+      chatInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') { e.preventDefault(); sendBtn.click(); }
+      });
+
+      quickArea.addEventListener('click', function(e){
+        if (e.target && e.target.classList.contains('btn')) {
+          var label = e.target.textContent || '';
+          // خرائط intent للأزرار
+          var map = {
+            'بدء متابعة طلب':'start_follow',
+            'رفع طلب جديد':'raise',
+            'متابعة طلباتي':'track',
+            'الأسئلة الشائعة':'faq',
+            'بيانات التواصل':'info',
+            'إلغاء':'cancel',
+            'شكوى':'type_complaint',
+            'اقتراح':'type_suggestion'
+          };
+          var intent = map[label] || 'home';
+          if (intent === 'type_complaint' || intent === 'type_suggestion') {
+            handleQuickExtra(intent);
+          } else {
+            handleIntent(intent);
+          }
+        }
+      });
+
+      // زر الوضع الليلي: استخدم الموجود في app.js إن وُجد، وإلا بديل بسيط
+      darkBtn.addEventListener('click', function(){
+        if (typeof window.toggleDarkMode === 'function') {
+          window.toggleDarkMode();
+        } else {
+          document.body.classList.toggle('dark-mode');
+          try {
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+          } catch(_){}
+        }
+      });
+
+      // تمهيد
+      (function boot(){
+        var old = [];
+        try { old = JSON.parse(localStorage.getItem('chatLog_contact') || '[]'); } catch(_){}
+        if (old.length) {
+          old.forEach(function(m){ addMsg(m.text, m.who); });
+        } else {
+          addMsg('مرحباً بك! كيف نقدر نساعدك اليوم؟ اختر من الخيارات بالأسفل أو اكتب سؤالك.', 'bot');
+        }
+        setQuick(QUICK_HOME);
+      })();
+
     })();
   </script>
 </body>
